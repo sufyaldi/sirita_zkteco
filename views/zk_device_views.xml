@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form View -->
+    <record id="view_zkteco_device_form" model="ir.ui.view">
+        <field name="name">zkteco.device.form</field>
+        <field name="model">zkteco.device</field>
+        <field name="arch" type="xml">
+            <form string="ZKTeco ADMS Device">
+                <header>
+                    <button name="action_pull_users" string="Tarik User" type="object" class="oe_highlight" invisible="not id"/>
+                    <button name="action_pull_attendance" string="Tarik Log Absensi" type="object" class="oe_highlight" invisible="not id"/>
+                    <button name="action_pull_users_alt" string="Tarik User (Alt)" type="object" class="btn-secondary" invisible="not id"/>
+                    <field name="is_active" widget="boolean_toggle"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_user_queue" type="object" class="oe_stat_button" icon="fa-users">
+                            <field name="queue_count" widget="statinfo" string="Antrean User"/>
+                        </button>
+                        <button name="action_view_commands" type="object" class="oe_stat_button" icon="fa-list">
+                            <field name="command_count" widget="statinfo" string="Log Perintah"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" string="Nama Mesin / Lokasi"/>
+                        <h1><field name="name" placeholder="Misal: Gedung Rektorat Lantai 1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="serial_number"/>
+                        </group>
+                        <group>
+                            <field name="last_seen" widget="datetime"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Petunjuk Pengaturan ADMS" name="adms_instruction">
+                            <p class="text-muted">
+                                <b>Cara Menghubungkan Mesin X100-C Anda ke Odoo:</b><br/>
+                                1. Masuk ke Menu Mesin -> Comm. (Komunikasi) -> Server Cloud Setting / ADMS.<br/>
+                                2. Atur Server Address ke IP/Domain instalasi Odoo Anda ini.<br/>
+                                3. Atur Server Port ke 8069 (atau port Reverse Proxy HTTPS Anda).<br/>
+                                4. Masukkan Serial Number (SN) persis dengan yang tertulis di balik mesin Anda ke form di atas.<br/>
+                                <i>Odoo ini secara otomatis akan 'mendengarkan'/menangkap koneksi PUSH HTTP mesin setiap detiknya tanpa perlu cron.</i>
+                            </p>
+                        </page>
+                        <page string="Debug ADMS" name="debug_adms">
+                            <group>
+                                <field name="debug_data" widget="ace" options="{'mode': 'text'}" nolabel="1" placeholder="Data mentah dari mesin akan muncul di sini setelah sinkronisasi..."/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Tree View -->
+    <record id="view_zkteco_device_tree" model="ir.ui.view">
+        <field name="name">zkteco.device.tree</field>
+        <field name="model">zkteco.device</field>
+        <field name="arch" type="xml">
+            <list string="ZKTeco ADMS Devices">
+                <field name="serial_number"/>
+                <field name="name"/>
+                <field name="last_seen" widget="datetime"/>
+                <field name="is_active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_zkteco_device" model="ir.actions.act_window">
+        <field name="name">Daftar Mesin ZKTeco</field>
+        <field name="res_model">zkteco.device</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_zkteco_device" 
+              name="Daftar Mesin Finger" 
+              parent="menu_zkteco_root" 
+              action="action_zkteco_device"
+              sequence="10"/>
+</odoo>

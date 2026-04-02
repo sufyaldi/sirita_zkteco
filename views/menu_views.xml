@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tambahkan menu ZKTeco ke bawah menu Absensi Utama (Attendance) Odoo -->
+    <menuitem id="menu_zkteco_root" 
+              name="Mesin ZKTeco (ADMS)"
+              parent="hr_attendance.menu_hr_attendance_root" 
+              sequence="100"/>
+</odoo>

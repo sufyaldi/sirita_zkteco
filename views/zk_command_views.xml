@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="zkteco_command_view_list" model="ir.ui.view">
+            <field name="name">zkteco.command.list</field>
+            <field name="model">zkteco.command</field>
+            <field name="arch" type="xml">
+                <list string="Log Perintah ADMS" decoration-info="status == 'sent'" decoration-success="status == 'completed'" decoration-warning="status == 'pending'" decoration-danger="status == 'error'">
+                    <field name="timestamp"/>
+                    <field name="device_id"/>
+                    <field name="command_text"/>
+                    <field name="status" widget="badge" decoration-info="status == 'sent'" decoration-success="status == 'completed'"/>
+                    <field name="response"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="zkteco_command_view_form" model="ir.ui.view">
+            <field name="name">zkteco.command.form</field>
+            <field name="model">zkteco.command</field>
+            <field name="arch" type="xml">
+                <form string="Detail Perintah ADMS">
+                    <header>
+                        <field name="status" widget="statusbar" statusbar_visible="pending,sent,completed,error"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="device_id" readonly="1"/>
+                                <field name="timestamp" readonly="1"/>
+                            </group>
+                            <group>
+                                <field name="command_text" readonly="1"/>
+                            </group>
+                        </group>
+                        <group string="Respon Balik Mesin">
+                            <field name="response" readonly="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="zkteco_command_action" model="ir.actions.act_window">
+            <field name="name">Log Perintah Mesin</field>
+            <field name="res_model">zkteco.command</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem id="menu_zkteco_command"
+                  name="Log Perintah"
+                  parent="menu_zkteco_root"
+                  action="zkteco_command_action"
+                  sequence="30"/>
+    </data>
+</odoo>

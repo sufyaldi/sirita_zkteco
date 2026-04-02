@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_zkteco_device,zkteco.device,model_zkteco_device,base.group_system,1,1,1,1
+access_zkteco_command,zkteco.command,model_zkteco_command,base.group_system,1,1,1,1
+access_zkteco_user_queue,zkteco.user.queue,model_zkteco_user_queue,base.group_system,1,1,1,1
