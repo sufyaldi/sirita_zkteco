@@ -14,7 +14,7 @@
         - Auto Create hr.attendance records.
     """,
     'author': 'SIRITA | sufyaldys@gmail.com',
-    'depends': ['base', 'hr', 'hr_attendance', 'sirita_akademik'],
+    'depends': ['base', 'hr', 'hr_attendance'],
     'data': [
         'security/ir.model.access.csv',
         'views/menu_views.xml',
