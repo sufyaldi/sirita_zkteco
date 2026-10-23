@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>User Requirement Specification (URS) - SIRITA ZKTeco & Tukin</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 25mm 20mm 25mm 20mm;
+            @bottom-right {
+                content: counter(page);
+                font-family: 'Helvetica Neue', Arial, sans-serif;
+                font-size: 9pt;
+            }
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #111;
+            margin: 0;
+            padding: 0;
+        }
+        .header-title {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 15px;
+        }
+        h1 {
+            font-size: 18pt;
+            margin: 0 0 8px 0;
+            text-transform: uppercase;
+            color: #1a365d;
+        }
+        .subtitle {
+            font-size: 13pt;
+            font-weight: bold;
+            color: #2b6cb0;
+            margin-bottom: 12px;
+        }
+        .meta-info {
+            font-size: 10pt;
+            color: #4a5568;
+            margin-top: 10px;
+        }
+        h2 {
+            font-size: 13pt;
+            color: #2c3e50;
+            border-bottom: 1px solid #cbd5e0;
+            padding-bottom: 4px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        h3 {
+            font-size: 11pt;
+            color: #2d3748;
+            margin-top: 15px;
+            margin-bottom: 6px;
+        }
+        p, li {
+            text-align: justify;
+        }
+        ul, ol {
+            margin-top: 4px;
+            margin-bottom: 12px;
+            padding-left: 24px;
+        }
+        li {
+            margin-bottom: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            font-size: 10pt;
+        }
+        th, td {
+            border: 1px solid #cbd5e0;
+            padding: 8px 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            font-weight: bold;
+        }
+        .badge {
+            background-color: #edf2f7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 9pt;
+        }
+        .box-summary {
+            background-color: #f7fafc;
+            border-left: 4px solid #3182ce;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        .diagram-container {
+            text-align: center;
+            margin: 20px 0;
+            border: 1px dashed #cbd5e0;
+            padding: 15px;
+            background-color: #fff;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-title">
+    <h1>Dokumen Spesifikasi Kebutuhan Pengguna<br>(User Requirement Specification - URS)</h1>
+    <div class="subtitle">Modul Presensi Biometrik Terintegrasi & Tunjangan Kinerja Kemenag<br>(SIRITA ZKTeco ADMS & PMA No. 11 Tahun 2019 - Odoo 20)</div>
+    <div class="meta-info">
+        <strong>Penyusun:</strong> Tim Pengembang Sistem Informasi Terpadu (SIRITA) | Institut Agama Islam Negeri (IAIN) Parepare<br>
+        <strong>Tanggal Dokumen:</strong> 23 Oktober 2026 | <strong>Versi:</strong> 1.0 (Final Official Release)
+    </div>
+</div>
+
+<div class="box-summary">
+    <strong>Ringkasan Eksekutif:</strong><br>
+    Dokumen Spesifikasi Kebutuhan Pengguna (User Requirement Specification / URS) ini menetapkan kebutuhan operasional, fungsional, dan non-fungsional untuk modul <strong>SIRITA ZKTeco & Tukin</strong> pada platform ERP Odoo 20 di IAIN Parepare. Modul ini mengotomatiskan penerimaan log presensi biometrik secara langsung (<em>real-time HTTP Push ADMS</em>) dari perangkat keras mesin sidik jari/wajah ZKTeco di seluruh gedung kampus, pencocokan cerdas (<em>smart-matching</em>) antrean ID mesin ke data induk aparatur sipil negara (ASN) / pegawai, pemrosesan keterlambatan dan kepulangan cepat, hingga penerbitan matriks rekapitulasi Tunjangan Kinerja (Tukin) bulanan resmi berbasis Peraturan Menteri Agama (PMA) No. 11 Tahun 2019.
+</div>
+
+<h2>1. Pendahuluan</h2>
+
+<h3>1.1 Latar Belakang</h3>
+<p>
+Pengelolaan kehadiran kerja pegawai negeri sipil dan tenaga honorer di lingkungan IAIN Parepare sebelumnya menghadapi kendala rekonsiliasi manual antara data log mesin absensi fisik di berbagai gedung fakultas dan rektorat dengan pelaporan tunjangan kinerja kementerian. 
+Dengan implementasi protokol ZKTeco ADMS (<em>Automatic Data Master Server</em>), mesin absensi di seluruh titik lokasi kampus bertindak sebagai klien mandiri yang mendorong (<em>push</em>) log kehadiran setiap detik melalui HTTP ke endpoint terpusat Odoo. Selanjutnya, sistem mengkalkulasi kehadiran secara matematis berdasarkan regulasi PMA No. 11 Tahun 2019 guna menghasilkan potongan kehadiran yang transparan, akuntabel, dan bebas manipulasi.
+</p>
+
+<h3>1.2 Tujuan Sistem</h3>
+<ol>
+    <li>Mengintegrasikan seluruh mesin absensi biometrik ZKTeco di kampus ke server ERP Odoo 20 tanpa memerlukan perantara perangkat lunak pihak ketiga (<em>middleware</em>).</li>
+    <li>Menyediakan antrean sinkronisasi (<em>User Queue</em>) cerdas untuk memetakan PIN mesin ke profil master pegawai (<span class="badge">hr.employee</span>) secara presisi tanpa duplikasi (<em>zero-hallucination</em>).</li>
+    <li>Menghitung persentase pemotongan kehadiran (TL1 s.d TL4 dan PC1 s.d PC4) secara otomatis terhadap Pagu Tukin Kelas Jabatan (Grade 1 s.d 17).</li>
+    <li>Mengakomodasi klausul khusus dosen sesuai regulasi Kemenag: Dosen non-sertifikasi dipotong 50% dari pagu tukin grade, dan Dosen bersertifikasi (Serdos) menerima selisih lebih antara Tukin dan Tunjangan Profesi Dosen (TPD).</li>
+    <li>Menghasilkan dokumen cetak resmi Laporan Rekapitulasi Tukin Bulanan bergaya matriks Excel (<em>Landscape</em>) lengkap dengan tanda tangan pejabat Rektor dan Kepala Biro.</li>
+</ol>
+
+<h2>2. Karakteristik Pengguna (User Characteristics)</h2>
+<ul>
+    <li><strong>Pegawai / ASN (Pengguna Akhir):</strong> Melakukan transaksi presensi biometrik (sidik jari/wajah/kartu RFID) pada mesin absensi di lingkungan kampus dan dapat meninjau rekapitulasi kehadiran mandiri melalui portal.</li>
+    <li><strong>Operator Kepegawaian (HR Officer):</strong> Memonitor konektivitas perangkat mesin ZKTeco, mengelola antrean pemetaan user baru dari mesin ke master pegawai, serta memvalidasi keabsahan data presensi.</li>
+    <li><strong>Kepala Bagian Kepegawaian / Analis SDM (HR Manager):</strong> Mengatur kelas jabatan (Grade 1--17), memicu proses kalkulasi bulanan Tukin, melakukan verifikasi rekapitulasi, dan mencetak dokumen matriks Tukin.</li>
+    <li><strong>Pejabat Penandatangan (Rektor & Kabiro AUAK):</strong> Menerima laporan rekapitulasi final Tukin sebagai dasar otorisasi pencairan tunjangan kinerja bulanan institusi.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>3. Spesifikasi Kebutuhan Fungsional (Functional Requirements)</h2>
+
+<h3>3.1 Alur Interaksi Global Sistem (Use Case Scope)</h3>
+<div class="diagram-container">
+    <svg width="650" height="260" xmlns="http://www.w3.org/2000/svg">
+        <!-- System Boundary -->
+        <rect x="170" y="10" width="310" height="240" rx="10" fill="#f8fafc" stroke="#4a5568" stroke-dasharray="4" stroke-width="1.5"/>
+        <text x="325" y="30" font-family="Arial" font-size="11" font-weight="bold" fill="#2b6cb0" text-anchor="middle">Sistem Presensi & Tukin SIRITA (Odoo 20)</text>
+
+        <!-- Mesin Actor -->
+        <rect x="10" y="35" width="130" height="40" rx="6" fill="#ebf8ff" stroke="#3182ce" stroke-width="1.5"/>
+        <text x="75" y="58" font-family="Arial" font-size="10" font-weight="bold" fill="#2c5282" text-anchor="middle">Mesin ZKTeco ADMS</text>
+
+        <!-- HR Operator Actor -->
+        <circle cx="75" cy="140" r="14" fill="#fff" stroke="#2d3748" stroke-width="1.5"/>
+        <line x1="75" y1="154" x2="75" y2="185" stroke="#2d3748" stroke-width="1.5"/>
+        <line x1="75" y1="165" x2="55" y2="175" stroke="#2d3748" stroke-width="1.5"/>
+        <line x1="75" y1="165" x2="95" y2="175" stroke="#2d3748" stroke-width="1.5"/>
+        <line x1="75" y1="185" x2="60" y2="205" stroke="#2d3748" stroke-width="1.5"/>
+        <line x1="75" y1="185" x2="90" y2="205" stroke="#2d3748" stroke-width="1.5"/>
+        <text x="75" y="222" font-family="Arial" font-size="9" font-weight="bold" fill="#2d3748" text-anchor="middle">Operator Kepegawaian</text>
+
+        <!-- Pegawai Actor -->
+        <circle cx="575" cy="140" r="14" fill="#fff" stroke="#2d3748" stroke-width="1.5"/>
+        <line x1="575" y1="154" x2="575" y2="185" stroke="#2d3748" stroke-width="1.5"/>
+        <line x1="575" y1="165" x2="555" y2="175" stroke="#2d3748" stroke-width="1.5"/>
+        <line x1="575" y1="165" x2="595" y2="175" stroke="#2d3748" stroke-width="1.5"/>
+        <line x1="575" y1="185" x2="560" y2="205" stroke="#2d3748" stroke-width="1.5"/>
+        <line x1="575" y1="185" x2="590" y2="205" stroke="#2d3748" stroke-width="1.5"/>
+        <text x="575" y="222" font-family="Arial" font-size="9" font-weight="bold" fill="#2d3748" text-anchor="middle">Pegawai / Dosen</text>
+
+        <!-- Use Cases -->
+        <ellipse cx="325" cy="55" rx="120" ry="16" fill="#ebf8ff" stroke="#3182ce" stroke-width="1.2"/>
+        <text x="325" y="59" font-family="Arial" font-size="10" fill="#1a365d" text-anchor="middle">Push Log Kehadiran (/iclock)</text>
+
+        <ellipse cx="325" cy="95" rx="120" ry="16" fill="#ebf8ff" stroke="#3182ce" stroke-width="1.2"/>
+        <text x="325" y="99" font-family="Arial" font-size="10" fill="#1a365d" text-anchor="middle">Pemetaan Antrean User (Smart-Mapping)</text>
+
+        <ellipse cx="325" cy="135" rx="120" ry="16" fill="#ebf8ff" stroke="#3182ce" stroke-width="1.2"/>
+        <text x="325" y="139" font-family="Arial" font-size="10" fill="#1a365d" text-anchor="middle">Pencatatan Kehadiran (hr.attendance)</text>
+
+        <ellipse cx="325" cy="175" rx="120" ry="16" fill="#ebf8ff" stroke="#3182ce" stroke-width="1.2"/>
+        <text x="325" y="179" font-family="Arial" font-size="10" fill="#1a365d" text-anchor="middle">Kalkulasi Matriks Tukin Bulanan</text>
+
+        <ellipse cx="325" cy="215" rx="120" ry="16" fill="#ebf8ff" stroke="#3182ce" stroke-width="1.2"/>
+        <text x="325" y="219" font-family="Arial" font-size="10" fill="#1a365d" text-anchor="middle">Cetak Laporan Rekapitulasi Tukin (PDF)</text>
+
+        <!-- Lines -->
+        <line x1="140" y1="55" x2="205" y2="55" stroke="#3182ce" stroke-width="1.5"/>
+        <line x1="100" y1="135" x2="205" y2="95" stroke="#4a5568" stroke-width="1.2"/>
+        <line x1="100" y1="160" x2="205" y2="175" stroke="#4a5568" stroke-width="1.2"/>
+        <line x1="100" y1="180" x2="205" y2="215" stroke="#4a5568" stroke-width="1.2"/>
+        <line x1="445" y1="135" x2="550" y2="140" stroke="#4a5568" stroke-width="1.2"/>
+    </svg>
+</div>
+
+<h3>3.2 Modul ADMS Endpoint & Perangkat Mesin</h3>
+<table>
+    <thead>
+        <tr>
+            <th width="20%">Kode Kebutuhan</th>
+            <th width="35%">Deskripsi Kebutuhan</th>
+            <th width="45%">Kriteria Keberhasilan / Verifikasi</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>FR-ADMS-01</strong></td>
+            <td>HTTP Push Ingestion Endpoint</td>
+            <td>Sistem menyediakan controller <span class="badge">/iclock/cdata</span> native Odoo yang merespons handshake protokol ZKTeco dengan status HTTP 200 "OK".</td>
+        </tr>
+        <tr>
+            <td><strong>FR-ADMS-02</strong></td>
+            <td>Registrasi Serial Number (SN)</td>
+            <td>Hanya transaksi dari mesin dengan Serial Number yang telah terdaftar aktif pada model <span class="badge">zkteco.device</span> yang diproses oleh server.</td>
+        </tr>
+        <tr>
+            <td><strong>FR-ADMS-03</strong></td>
+            <td>Heartbeat & Monitoring Perangkat</td>
+            <td>Waktu aktivitas terakhir (<span class="badge">last_seen</span>) terupdate otomatis setiap mesin mengirimkan request ping periodik.</td>
+        </tr>
+        <tr>
+            <td><strong>FR-ADMS-04</strong></td>
+            <td>Antrean Perintah Perangkat (Commands)</td>
+            <td>Operator dapat memicu perintah tarik user (<span class="badge">DATA USER</span>) atau tarik log (<span class="badge">DATA ATTLOG</span>) via model <span class="badge">zkteco.command</span>.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>3.3 Modul Antrean User (User Queue & Smart-Matching)</h3>
+<table>
+    <thead>
+        <tr>
+            <th width="20%">Kode Kebutuhan</th>
+            <th width="35%">Deskripsi Kebutuhan</th>
+            <th width="45%">Kriteria Keberhasilan / Verifikasi</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>FR-MAP-01</strong></td>
+            <td>Penampungan Data Mesin</td>
+            <td>User baru yang ditarik dari hardware ditampung dalam <span class="badge">zkteco.user.queue</span> dengan status <span class="badge">new</span>.</td>
+        </tr>
+        <tr>
+            <td><strong>FR-MAP-02</strong></td>
+            <td>Smart Matching Presisi (Bebas Halusinasi)</td>
+            <td>Pemetaan otomatis hanya dilakukan pada data <em>Single Match</em> yang unik 100%. Data nama terpotong yang memiliki lebih dari 1 kandidat diwajibkan konfirmasi manual.</td>
+        </tr>
+        <tr>
+            <td><strong>FR-MAP-03</strong></td>
+            <td>Konsistensi Relasi Presensi</td>
+            <td>Begitu PIN dipetakan ke pegawai (<span class="badge">hr.employee</span>), seluruh log absensi masa lalu dan masa depan otomatis terhubung ke pegawai tersebut.</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h3>3.4 Modul Tunjangan Kinerja Kemenag (PMA No. 11 Tahun 2019)</h3>
+<table>
+    <thead>
+        <tr>
+            <th width="20%">Kode Kebutuhan</th>
+            <th width="35%">Deskripsi Kebutuhan</th>
+            <th width="45%">Kriteria Keberhasilan / Verifikasi</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>FR-TUKIN-01</strong></td>
+            <td>Master Kelas Jabatan & Pagu</td>
+            <td>Tersedia master 17 Grade Tukin sesuai ketentuan PMA 11/2019 (Grade 1 s.d Grade 17).</td>
+        </tr>
+        <tr>
+            <td><strong>FR-TUKIN-02</strong></td>
+            <td>Analisis Terlambat & Pulang Cepat</td>
+            <td>Sistem mengidentifikasi keterlambatan (TL1: 0.5%, TL2: 1%, TL3: 1.25%, TL4: 1.5%) dan pulang cepat (PC1: 0.5%, PC2: 1%, PC3: 1.25%, PC4: 1.5%) harian dari <span class="badge">hr.attendance</span>.</td>
+        </tr>
+        <tr>
+            <td><strong>FR-TUKIN-03</strong></td>
+            <td>Klausul Khusus Dosen</td>
+            <td>Dosen Non-Serdos menerima 50% pagu grade. Dosen Serdos menerima selisih lebih positif antara Tukin Grade dan TPD (Rp 0 jika TPD >= Tukin).</td>
+        </tr>
+        <tr>
+            <td><strong>FR-TUKIN-04</strong></td>
+            <td>Penerbitan Rekapitulasi Bulanan</td>
+            <td>Model <span class="badge">tukin.calculation</span> mengompilasi rekapitulasi seluruh pegawai dan menghitung potongan kehadiran serta Tukin final yang dibayarkan.</td>
+        </tr>
+        <tr>
+            <td><strong>FR-TUKIN-05</strong></td>
+            <td>Cetak Rekap Matriks Landscape</td>
+            <td>Sistem menyediakan template laporan PDF Landscape resmi (Matrix V2) lengkap dengan tanda tangan pejabat Rektor dan Kabiro AUAK.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>4. Spesifikasi Kebutuhan Non-Fungsional (Non-Functional Requirements)</h2>
+<ul>
+    <li><strong>NFR-PERF-01 (Throughput ADMS):</strong> Endpoint HTTP controller ADMS mampu melayani request PUSH secara konkuren dari minimal 20 mesin fisik dengan waktu respons di bawah 200 ms.</li>
+    <li><strong>NFR-PERF-02 (Kecepatan Kalkulasi):</strong> Proses perhitungan Tukin bulanan untuk minimal 500 pegawai selesai dalam waktu kurang dari 30 detik.</li>
+    <li><strong>NFR-SEC-01 (Keamanan & Integritas Data):</strong> Akses konfigurasi Tukin dan parameter perangkat dibatasi hanya untuk Administrator dan Pengelola Kepegawaian. Log absensi yang telah disahkan ke dalam status <em>Done</em> tidak dapat dimanipulasi oleh operator biasa.</li>
+    <li><strong>NFR-COMP-01 (Kompatibilitas Versi):</strong> Modul dirancang murni untuk Odoo 20 (dukungan ORM modern, syntax view XML <span class="badge">&lt;list&gt;</span>, dan Python 3.12).</li>
+</ul>
+
+<h2>5. Daftar Titik Lokasi Perangkat Mesin Terpasang</h2>
+<p>Saat ini modul melayani 8 perangkat biometrik ZKTeco aktif di lingkungan kampus IAIN Parepare:</p>
+<ol>
+    <li>Rektorat Lantai 1 (Gedung Rektorat Utama)</li>
+    <li>Rektorat Lantai 2 (Ruang Pimpinan & Administrasi)</li>
+    <li>Fakultas Tarbiyah (Gedung Tarbiyah)</li>
+    <li>Fakultas Syariah dan Ilmu Hukum Islam (FASIH)</li>
+    <li>Fakultas Ekonomi dan Bisnis Islam (FEBI)</li>
+    <li>Fakultas Ushuluddin, Adab dan Dakwah (FUAD)</li>
+    <li>Gedung Perpustakaan Terpadu</li>
+    <li>Gedung Ma'had Al-Jami'ah</li>
+</ol>
+
+</body>
+</html>

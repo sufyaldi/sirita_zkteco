@@ -1,0 +1,208 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[indonesian]{babel}
+\usepackage{microtype}
+\usepackage[none]{hyphenat}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{titlesec}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,fit,calc,shadows}
+
+\title{\textbf{Dokumen Spesifikasi Kebutuhan Pengguna \\ (User Requirement Specification - URS)} \\ \large Modul Presensi Biometrik Terintegrasi \& Tunjangan Kinerja Kemenag \\ (SIRITA ZKTeco \& Tukin PMA 11/2019 - Odoo 20)}
+\author{Tim Pengembang Sistem Informasi Terpadu (SIRITA) \\ IAIN Parepare}
+\date{23 Oktober 2026 \\ \vspace{0.2cm} \textbf{Versi 1.0 (Final)}}
+
+\begin{document}
+\sloppy
+
+\maketitle
+
+\section*{Ringkasan Eksekutif}
+Dokumen Spesifikasi Kebutuhan Pengguna (\textit{User Requirement Specification} / URS) ini menetapkan kebutuhan operasional, fungsional, dan non-fungsional untuk modul \textbf{SIRITA ZKTeco \& Tukin} pada platform ERP Odoo 20 di Institut Agama Islam Negeri (IAIN) Parepare. Modul ini mengotomatiskan penerimaan log presensi biometrik secara langsung (\textit{real-time HTTP Push ADMS}) dari perangkat keras mesin sidik jari/wajah ZKTeco di seluruh gedung kampus, pencocokan otomatis (\textit{smart-matching}) antrean ID mesin ke data induk aparatur sipil (ASN) / pegawai, pemrosesan keterlambatan dan kepulangan cepat, hingga penerbitan matriks rekapitulasi Tunjangan Kinerja (Tukin) bulanan resmi berbasis Peraturan Menteri Agama (PMA) No. 11 Tahun 2019.
+
+\tableofcontents
+\newpage
+
+\section{Pendahuluan}
+\subsection{Latar Belakang}
+Pengelolaan kehadiran kerja pegawai negeri sipil dan tenaga honorer di lingkungan IAIN Parepare sebelumnya menghadapi kendala rekonsiliasi manual antara data log mesin absensi fisik di berbagai gedung fakultas dan rektorat dengan pelaporan tunjangan kinerja kementerian. 
+Dengan implementasi protokol ZKTeco ADMS (\textit{Automatic Data Master Server}), mesin absensi di seluruh titik lokasi kampus bertindak sebagai klien mandiri yang mendorong (\textit{push}) log kehadiran setiap detik melalui HTTP ke endpoint terpusat Odoo. Selanjutnya, sistem mengkalkulasi kehadiran secara matematis berdasarkan regulasi PMA No. 11 Tahun 2019 guna menghasilkan potongan kehadiran yang transparan, akuntabel, dan bebas manipulasi.
+
+\subsection{Tujuan Sistem}
+\begin{enumerate}
+    \item Mengintegrasikan seluruh mesin absensi biometrik ZKTeco di kampus ke server ERP Odoo 20 tanpa memerlukan perantara perangkat lunak pihak ketiga (\textit{middleware}).
+    \item Menyediakan antrean sinkronisasi (\textit{User Queue}) cerdas untuk memetakan PIN mesin ke profil master pegawai (\texttt{hr.employee}) secara presisi tanpa duplikasi (*zero-hallucination*).
+    \item Menghitung persentase pemotongan kehadiran (TL1 s.d TL4 dan PC1 s.d PC4) secara otomatis terhadap Pagu Tukin Kelas Jabatan (Grade 1 s.d 17).
+    \item Mengakomodasi klausul khusus dosen sesuai regulasi Kemenag: Dosen non-sertifikasi dipotong 50\% dari pagu tukin grade, dan Dosen bersertifikasi (Serdos) menerima selisih lebih antara Tukin dan Tunjangan Profesi Dosen (TPD).
+    \item Menghasilkan dokumen cetak resmi Laporan Rekapitulasi Tukin Bulanan bergaya matriks Excel (*Landscape Letter/A4*) lengkap dengan tanda tangan pejabat Rektor dan Kepala Biro.
+\end{enumerate}
+
+\section{Karakteristik Pengguna (User Characteristics)}
+\begin{itemize}
+    \item \textbf{Pegawai / ASN (Pengguna Akhir):} Melakukan transaksi presensi biometrik (sidik jari/wajah/kartu RFID) pada mesin absensi di lingkungan kampus dan dapat meninjau rekapitulasi kehadiran mandiri melalui portal.
+    \item \textbf{Operator Kepegawaian (HR Officer):} Memonitor konektivitas perangkat mesin ZKTeco, mengelola antrean pemetaan user baru dari mesin ke master pegawai, serta memvalidasi keabsahan data presensi.
+    \item \textbf{Kepala Bagian Kepegawaian / Analis SDM (HR Manager):} Mengatur kelas jabatan (Grade 1--17), memicu proses kalkulasi bulanan Tukin, melakukan verifikasi rekapitulasi, dan mencetak dokumen matriks Tukin.
+    \item \textbf{Pejabat Penandatangan (Rektor \& Kabiro AUAK):} Menerima laporan rekapitulasi final Tukin sebagai dasar otorisasi pencairan tunjangan kinerja bulanan institusi.
+\end{itemize}
+
+\section{Spesifikasi Kebutuhan Fungsional (Functional Requirements)}
+
+\subsection{Use Case Diagram}
+Diagram berikut menggambarkan alur interaksi fungsional antara pengguna, perangkat keras mesin absensi, dan sistem SIRITA Odoo 20:
+
+\vspace{0.5cm}
+\begin{center}
+\begin{tikzpicture}[
+    actor/.style={
+        rectangle,
+        font=\small\bfseries,
+        text centered,
+        minimum height=2em
+    },
+    usecase/.style={
+        ellipse,
+        draw=blue!60,
+        fill=blue!5,
+        thick,
+        font=\small,
+        text centered,
+        minimum height=2.3em,
+        minimum width=4.2cm,
+        drop shadow={opacity=0.15}
+    },
+    sysboundary/.style={
+        rectangle,
+        draw=black!50,
+        thick,
+        dashed,
+        rounded corners=3mm,
+        inner sep=10pt
+    }
+]
+
+% Stickman definition
+\def\stickman#1#2{
+    \node[circle,draw,solid,thick,minimum size=0.45cm] (head#1) at (#2) {};
+    \draw[solid,thick] (head#1.south) -- ++(0,-0.7) coordinate (body#1);
+    \draw[solid,thick] (body#1) -- ++(-0.25,-0.5);
+    \draw[solid,thick] (body#1) -- ++(0.25,-0.5);
+    \draw[solid,thick] (head#1.south) ++(0,-0.15) coordinate (neck#1) -- ++(-0.35,-0.25);
+    \draw[solid,thick] (neck#1) -- ++(0.35,-0.25);
+}
+
+% Actors
+\node (dev_pos) at (0, 4.5) {};
+\node[draw,thick,rectangle,rounded corners=2mm,fill=gray!10,font=\bfseries\small,align=center] (dev_label) at (0, 4.5) {Perangkat Mesin\\ZKTeco (ADMS)};
+
+\node (admin_pos) at (0, 0) {};
+\stickman{1}{0, 0.5}
+\node[font=\bfseries\small, align=center] (admin_label) at (0, -1) {Operator Kepegawaian\\/ Analis SDM};
+
+\node (user_pos) at (12, 2) {};
+\stickman{2}{12, 2.5}
+\node[font=\bfseries\small, align=center] (user_label) at (12, 1) {Pegawai / Dosen\\(ASN)};
+
+% Use Cases
+\node[usecase] (uc1) at (6, 5.5) {Push Log Kehadiran (/iclock)};
+\node[usecase] (uc2) at (6, 4.0) {Registrasi \& Pantau Status Mesin};
+\node[usecase] (uc3) at (6, 2.5) {Pemetaan Antrean User (Smart-Mapping)};
+\node[usecase] (uc4) at (6, 1.0) {Pencatatan Log Kehadiran (hr.attendance)};
+\node[usecase] (uc5) at (6, -0.5) {Kalkulasi Matriks Tukin Bulanan};
+\node[usecase] (uc6) at (6, -2.0) {Cetak Rekap Matriks Tukin (PDF)};
+
+% System Boundary
+\node[sysboundary, inner ysep=20pt, fit=(uc1) (uc6), label={[anchor=south, yshift=0.1cm, font=\bfseries]north:Sistem Presensi \& Tukin SIRITA (Odoo 20)}] (system) {};
+
+% Connections
+\draw[thick] (dev_label.east) -- (uc1.west);
+\draw[thick] (admin_label.east) -- (uc2.west);
+\draw[thick] (admin_label.east) -- (uc3.west);
+\draw[thick] (admin_label.east) -- (uc5.west);
+\draw[thick] (admin_label.east) -- (uc6.west);
+\draw[thick] (uc4.east) -- (user_label.west);
+\draw[thick,dashed] (uc1.south) -- (uc4.north);
+
+\end{tikzpicture}
+\end{center}
+\vspace{0.5cm}
+
+\subsection{Kebutuhan Fungsional ADMS Endpoint \& Perangkat Mesin}
+\begin{enumerate}
+    \item \textbf{FR-ADMS-01 (HTTP Push Ingestion):} Sistem harus menyediakan endpoint HTTP native \texttt{/iclock/cdata} yang mampu menerima transaksi presensi metode GET (Handshake) dan POST (Push Log) dari mesin ZKTeco secara real-time.
+    \item \textbf{FR-ADMS-02 (Perangkat Terdaftar):} Sistem hanya menerima transaksi dari Serial Number (SN) perangkat yang telah didaftarkan pada model \texttt{zkteco.device}.
+    \item \textbf{FR-ADMS-03 (Heartbeat \& Status Perangkat):} Sistem harus memperbarui kolom waktu aktivitas terakhir (\texttt{last\_seen}) setiap kali perangkat mengirimkan ping koneksi.
+    \item \textbf{FR-ADMS-04 (Antrean Perintah Perangkat):} Sistem harus menyediakan mekanisme antrean perintah (\texttt{zkteco.command}) untuk menarik data pengguna dari mesin (\texttt{DATA USER}) maupun log transaksi absensi (\texttt{DATA ATTLOG}).
+\end{enumerate}
+
+\subsection{Kebutuhan Fungsional Manajemen Antrean User (User Queue)}
+\begin{enumerate}
+    \item \textbf{FR-MAP-01 (Penampungan Data Mesin):} Seluruh identitas pengguna yang didaftarkan pada perangkat mesin harus ditampung dalam model \texttt{zkteco.user.queue} dengan status awal \texttt{new}.
+    \item \textbf{FR-MAP-02 (Pencocokan Cerdas / Smart Matching):} Sistem harus menyediakan mekanisme pemetaan otomatis berjenjang:
+    \begin{itemize}
+        \item Mencocokkan PIN perangkat terhadap atribut \texttt{zk\_pin} pada master data pegawai.
+        \item Mencocokkan nama terpotong perangkat terhadap nama lengkap pegawai (Single-match exact normalisasi).
+    \end{itemize}
+    \item \textbf{FR-MAP-03 (Pencegahan False-Positive / Anti-Halusinasi):} Sistem dilarang secara mutlak menghubungkan nama yang ambigu (memiliki lebih dari 1 kandidat di kampus) secara otomatis tanpa intervensi verifikasi operator.
+    \item \textbf{FR-MAP-04 (Integritas Relasi Presensi):} Ketika antrean berhasil dipetakan ke pegawai, seluruh log kehadiran lampau dan mendatang dari PIN tersebut wajib terhubung ke pegawai yang bersangkutan.
+\end{enumerate}
+
+\subsection{Kebutuhan Fungsional Penggajian \& Tukin Kemenag (PMA 11/2019)}
+\begin{enumerate}
+    \item \textbf{FR-TUKIN-01 (Master Kelas Jabatan):} Sistem harus memuat konfigurasi Pagu Tunjangan Kinerja untuk Grade 1 sampai Grade 17 sesuai regulasi Kementerian Agama.
+    \item \textbf{FR-TUKIN-02 (Klasifikasi Keterlambatan \& Pulang Cepat):} Sistem harus menganalisis transaksi harian \texttt{hr.attendance} untuk menghitung frekuensi pelanggaran jam kerja:
+    \begin{itemize}
+        \item Terlambat Datang: TL1 (1--30 menit, pot. 0.5\%), TL2 (31--60 menit, pot. 1\%), TL3 (61--90 menit, pot. 1.25\%), TL4 (>90 menit / tanpa jam masuk, pot. 1.5\%).
+        \item Pulang Cepat: PC1 (1--30 menit, pot. 0.5\%), PC2 (31--60 menit, pot. 1\%), PC3 (61--90 menit, pot. 1.25\%), PC4 (>90 menit / tanpa jam pulang, pot. 1.5\%).
+    \end{itemize}
+    \item \textbf{FR-TUKIN-03 (Skema Khusus Dosen):}
+    \begin{itemize}
+        \item Dosen Non-Sertifikasi (\textit{Non-Serdos}): Dasar perhitungan Tukin ditetapkan sebesar 50\% dari pagu kelas jabatan yang bersangkutan.
+        \item Dosen Tersertifikasi (\textit{Serdos}): Dasar perhitungan Tukin adalah selisih lebih positif antara Tukin Grade dikurangi nominal Tunjangan Profesi Dosen (TPD). Apabila TPD lebih besar atau sama dengan Tukin Grade, maka Tukin adalah Rp 0,-.
+    \end{itemize}
+    \item \textbf{FR-TUKIN-04 (Penerbitan Rekapitulasi Matriks Bulanan):} Sistem harus mengompilasi rekapitulasi presensi dan memotong pagu dasar secara otomatis menghasilkan nilai akhir Tukin yang siap dibayarkan.
+    \item \textbf{FR-TUKIN-05 (Cetak Dokumen Resmi):} Sistem harus mampu mencetak dokumen laporan rekapitulasi dalam format PDF landscape berstandar akuntansi kementerian lengkap dengan QR-code otentikasi.
+\end{enumerate}
+
+\section{Spesifikasi Kebutuhan Non-Fungsional (Non-Functional Requirements)}
+
+\subsection{Kinerja \& Skalabilitas (Performance \& Scalability)}
+\begin{itemize}
+    \item \textbf{NFR-PERF-01 (Throughput ADMS):} Endpoint ADMS harus mampu melayani request PUSH HTTP serentak dari minimal 20 mesin absensi dengan latensi di bawah 200 milidetik per request.
+    \item \textbf{NFR-PERF-02 (Batch Calculation):} Proses kalkulasi Tukin bulanan untuk minimal 500 pegawai harus selesai dalam waktu kurang dari 30 detik.
+\end{itemize}
+
+\subsection{Keamanan \& Integritas Data (Security)}
+\begin{itemize}
+    \item \textbf{NFR-SEC-01 (Validasi Header ADMS):} Setiap request push harus memvalidasi kesesuaian SN mesin dan alamat IP gateway yang sah.
+    \item \textbf{NFR-SEC-02 (Role-Based Access Control):} Akses konfigurasi Tukin dan mesin dibatasi hanya untuk grup \texttt{hr.group\_hr\_manager} dan Administrator Sistem.
+    \item \textbf{NFR-SEC-03 (Data Immobility):} Log absensi mentah (\texttt{check\_in} dan \texttt{check\_out}) yang telah disahkan ke dalam draf Tukin bulanan berstatus \textit{Done} tidak dapat diubah oleh operator biasa.
+\end{itemize}
+
+\subsection{Tumpukan Teknologi (Technology Stack)}
+\begin{itemize}
+    \item \textbf{Platform Aplikasi:} Odoo Community Version 20.0 (Python 3.12, Werkzeug WSGI Framework).
+    \item \textbf{Basis Data:} PostgreSQL 16 dengan ekstensi optimasi indeks kueri timestamp.
+    \item \textbf{Protokol Hardware:} HTTP/1.1 REST Push Protocol (ZKTeco ADMS Specification).
+    \item \textbf{Pelaporan:} Odoo QWeb Engine \& Wkhtmltopdf (Rendering PDF Landscape beresolusi tinggi).
+\end{itemize}
+
+\section{Daftar Perangkat \& Lokasi Fisik Mesin Terpasang}
+Sistem saat ini melayani 8 perangkat biometrik aktif di kampus IAIN Parepare:
+\begin{enumerate}
+    \item Rektorat Lantai 1 (Gedung Rektorat Utama)
+    \item Rektorat Lantai 2 (Ruang Pimpinan \& Administrasi)
+    \item Fakultas Tarbiyah (Gedung Tarbiyah)
+    \item Fakultas Syariah dan Ilmu Hukum Islam (FASIH)
+    \item Fakultas Ekonomi dan Bisnis Islam (FEBI)
+    \item Fakultas Ushuluddin, Adab dan Dakwah (FUAD)
+    \item Gedung Perpustakaan Terpadu
+    \item Gedung Ma'had Al-Jami'ah
+\end{enumerate}
+
+\end{document}
